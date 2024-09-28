@@ -15,7 +15,7 @@ def escape_special_characters(text):
     return  text
 
 def extract_code_name(text):
-    pattern = r'Code:\s*(\S+)'
+    pattern = r'Code:?\s*(\S+)'
     match = re.search(pattern, text, re.IGNORECASE)
     if match:
         return match.group(1)

@@ -13,6 +13,8 @@ urlpatterns = [
     path('upload/', views.upload_material, name='upload_material'),  # Ensure this is included
     path('delete_material/<int:pk>/', views.delete_material, name='delete_material'),
     path('download/all/<str:material_type>/', views.download_all_materials, name='download_all_materials'),
-
+    path('view/<int:material_id>/', views.view_material, name='view_material'),
+    path('import/', views.import_subjects, name='import_subjects'),
+    path('export/', views.export_subjects, name='export_subjects'),
 ]
 

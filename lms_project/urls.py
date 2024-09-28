@@ -37,6 +37,8 @@ urlpatterns = [
     path('user/', include('user.urls')),  
     path('user_module/', include('user_module.urls')),  
     path('tools/', include('tools.urls')),
+    path('home/', include('home.urls')),
+    path('student_materials/', include('student_materials.urls')),
          
     # Add more paths for other new apps here
 ]

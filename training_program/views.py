@@ -1,9 +1,12 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import TrainingProgram
+from module_group.models import ModuleGroup
+from user.models import CustomUser
 from training_program_subjects.models import TrainingProgramSubjects
+
 from .forms import TrainingProgramForm 
 from training_program_subjects.forms import TrainingProgramSubjectsForm 
-from module_group.models import ModuleGroup
+
 # Home view
 def home(request):
     return render(request, 'home.html')

@@ -16,6 +16,7 @@ import os
 
 # ...
 
+AUTH_USER_MODEL = 'user.CustomUser'
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -63,6 +64,8 @@ INSTALLED_APPS = [
     # 'quiz',
     'user_module',
     'tools',
+    'home',
+    'student_materials'
 ]
 
 

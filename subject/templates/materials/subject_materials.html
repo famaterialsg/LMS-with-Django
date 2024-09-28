@@ -44,17 +44,20 @@
             <a href="{% url 'subject:download_all_materials' 'assignments' %}" class="btn btn-primary mb-4">
                 <i class="fas fa-download"></i> Download All 
             </a>
-            <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
-                <table class="table table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th style="width: 5%;">#</th>
-                            <th style="width: 40%;">File Name</th>
-                            <th style="width: 15%;">File Type</th>
-                            <th style="width: 20%;">File Size</th>
-                            <th style="width: 20%;">Actions</th>
-                        </tr>
-                    </thead>
+            
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">#</th>
+                        <th style="width: 40%;">File Name</th>
+                        <th style="width: 15%;">File Type</th>
+                        <th style="width: 20%;">File Size</th>
+                        <th style="width: 20%;">Actions</th>
+                    </tr>
+                </thead>
+            </table>
+                <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                    <table>
                     <tbody>
                         {% for assignment in assignments %}
                         <tr>
@@ -89,18 +92,22 @@
             <a href="{% url 'subject:download_all_materials' 'labs' %}" class="btn btn-primary mb-4">
                 <i class="fas fa-download"></i> Download All 
             </a>
+            
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">#</th>
+                        <th style="width: 40%;">File Name</th>
+                        <th style="width: 15%;">File Type</th>
+                        <th style="width: 20%;">File Size</th>
+                        <th style="width: 20%;">Actions</th>
+                    </tr>
+                </thead>
+            </table>
             <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
                 <table class="table table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th style="width: 5%;">#</th>
-                            <th style="width: 40%;">File Name</th>
-                            <th style="width: 15%;">File Type</th>
-                            <th style="width: 20%;">File Size</th>
-                            <th style="width: 20%;">Actions</th>
-                        </tr>
-                    </thead>
                     <tbody>
+                        
                         {% for lab in labs %}
                         <tr>
                             <td style="width: 5%;">{{ forloop.counter }}</td>
@@ -117,6 +124,14 @@
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
+                                <!-- View button -->
+                                {% if lab.id %}
+                                <a href="{% url 'subject:view_material' lab.id %}" title="View Material" class="btn btn-info btn-sm" target="_blank">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% else %}
+                                    <span class="text-muted">No file available</span>
+                                {% endif %}
                             </td>
                         </tr>
                         {% empty %}
@@ -134,17 +149,20 @@
             <a href="{% url 'subject:download_all_materials' 'lectures' %}" class="btn btn-primary mb-4">
                 <i class="fas fa-download"></i> Download All 
             </a>
+            
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">#</th>
+                        <th style="width: 40%;">File Name</th>
+                        <th style="width: 15%;">File Type</th>
+                        <th style="width: 20%;">File Size</th>
+                        <th style="width: 20%;">Actions</th>
+                    </tr>
+                </thead>
+            </table>
             <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
                 <table class="table table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th style="width: 5%;">#</th>
-                            <th style="width: 40%;">File Name</th>
-                            <th style="width: 15%;">File Type</th>
-                            <th style="width: 20%;">File Size</th>
-                            <th style="width: 20%;">Actions</th>
-                        </tr>
-                    </thead>
                     <tbody>
                         {% for lecture in lectures %}
                         <tr>
@@ -179,17 +197,20 @@
             <a href="{% url 'subject:download_all_materials' 'references' %}" class="btn btn-primary mb-4">
                 <i class="fas fa-download"></i> Download All
             </a>
+           
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">#</th>
+                        <th style="width: 40%;">File Name</th>
+                        <th style="width: 15%;">File Type</th>
+                        <th style="width: 20%;">File Size</th>
+                        <th style="width: 20%;">Actions</th>
+                    </tr>
+                </thead>
+            </table>
             <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
                 <table class="table table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th style="width: 5%;">#</th>
-                            <th style="width: 40%;">File Name</th>
-                            <th style="width: 15%;">File Type</th>
-                            <th style="width: 20%;">File Size</th>
-                            <th style="width: 20%;">Actions</th>
-                        </tr>
-                    </thead>
                     <tbody>
                         {% for reference in references %}
                         <tr>
