@@ -24,7 +24,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Add or update media settings for handling uploaded files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
+LOGIN_URL = 'main:login'
+LOGOUT_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/'
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
