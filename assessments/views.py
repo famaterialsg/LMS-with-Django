@@ -25,7 +25,7 @@ from django.db import transaction
 from django.core.exceptions import ValidationError
 from exercises.libs.submission import grade_submission, precheck
 from exercises.models import Submission
-
+from module_group.models import ModuleGroup
 #Working
 
 from django.utils.http import urlencode
@@ -148,9 +148,6 @@ def take_assessment(request, assessment_id):
         'email':email,
     })
 
-
-
-
 @login_required
 def take_assessment_bk(request, assessment_id):
     assessment = get_object_or_404(Assessment, id=assessment_id)
@@ -246,31 +243,10 @@ def assessment_result(request, assessment_id, attempt_id):
     # Render the result page
     return render(request, 'assessment/assessment_result.html', context)
 
-# def assessment_invite_accept(request, uidb64, token):
-#     try:
-#         # Decode the uidb64 to get the InvitedCandidate ID
-#         uid = force_str(urlsafe_base64_decode(uidb64))
-#         invited_candidate = InvitedCandidate.objects.get(pk=uid)
-
-#         # Check if the token is valid
-#         if invite_token_generator.check_token(invited_candidate, token):
-#             # Check if the invitation is expired
-#             if invited_candidate.expiration_date >= timezone.now():
-#                 # Invitation is valid, redirect to assessment
-#                 assessment = invited_candidate.assessment
-#                 return render(request, 'assessment/take_assessment.html', {'assessment': assessment})
-#             else:
-#                 messages.error(request, "This invitation link has expired.")
-#                 return redirect('assessment:assessment_list')  # Redirect as appropriate
-#         else:
-#             messages.error(request, "This invitation link is invalid.")
-#             return redirect('assessment:assessment_list')  # Redirect as appropriate
-#     except (TypeError, ValueError, OverflowError, InvitedCandidate.DoesNotExist):
-#         messages.error(request, "This invitation link is invalid.")
-#         return redirect('assessment:assessment_list')  # Redirect as appropriate
 
 from django.shortcuts import redirect
 
+login_required
 def handle_anonymous_info(request, invited_candidate_id):
     invited_candidate = InvitedCandidate.objects.get(pk=invited_candidate_id)
     if request.method == 'POST':
@@ -294,7 +270,6 @@ def handle_anonymous_info(request, invited_candidate_id):
 
 
 def assessment_invite_accept(request, uidb64, token):
-    print('come here the first time')
     try:
         # Decode the uidb64 to get the InvitedCandidate ID
         uid = force_str(urlsafe_base64_decode(uidb64))
@@ -533,8 +508,10 @@ def assessment_list(request):
             'question_count': question_count,
         })
 
+    module_groups = ModuleGroup.objects.all()
     # Pass the assessments with their exercise and question counts to the template
     return render(request, 'assessment/assessment_list.html', {
+        'module_groups': module_groups,
         'courses': courses,
         'assessments_with_counts': assessments_with_counts,
     })

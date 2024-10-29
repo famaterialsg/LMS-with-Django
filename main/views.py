@@ -283,7 +283,6 @@ def login_view(request):
     })
 
 
-
 def home(request):
     query = request.GET.get('q')
     all_modules = Module.objects.all()
