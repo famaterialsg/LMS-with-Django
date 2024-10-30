@@ -238,11 +238,7 @@ def register_user_info(request):
     return render(request, 'register_user_info.html', {'form': user_form})
 
 
-
-
 def login_view(request):
-    selected_role = request.POST.get('role', '')
-
     if request.method == 'POST':
         form = CustomLoginForm(request.POST)
 
@@ -257,17 +253,15 @@ def login_view(request):
                 login(request, user)
 
                 if user.is_superuser:
-                    return redirect('/admin/')  # Chuyển hướng đến admin nếu là superuser
+                    return redirect('main:home')
 
                 user_role = user.profile.role.role_name
 
-                # Kiểm tra xem role đã chọn có khớp với role của người dùng không
-                if user_role == selected_role:
-                    messages.success(request, "Đăng nhập thành công!")
-                    next_url = request.GET.get('next', 'main:home')
-                    return redirect(next_url)
-                else:
-                    messages.error(request, "Vai trò không khớp với vai trò tài khoản của bạn.")
+                # Hiển thị thông báo đăng nhập thành công
+                messages.success(request, "Đăng nhập thành công!")
+                next_url = request.GET.get('next', 'main:home')
+                return redirect(next_url)
+
             else:
                 messages.error(request, "Tên đăng nhập hoặc mật khẩu không hợp lệ.")
         else:
@@ -275,13 +269,9 @@ def login_view(request):
     else:
         form = CustomLoginForm()
 
-    roles = Role.objects.all()
     return render(request, 'login.html', {
         'form': form,
-        'roles': roles,
-        'selected_role': selected_role if not request.user.is_superuser else ''
     })
-
 
 def home(request):
     query = request.GET.get('q')
@@ -326,39 +316,4 @@ def home(request):
     })
 
 
-# def home(request):
-#     query = request.GET.get('q')
-#     all_modules = Module.objects.all()
 
-#     if request.user.is_authenticated:
-#         try:
-#             user_profile = getattr(request.user, 'profile', None)
-#             user_role = getattr(user_profile, 'role', None)
-
-#             if request.user.is_superuser:
-#                 modules = all_modules
-#             elif user_role:
-#                 modules = all_modules.filter(role_modules=user_role).distinct()
-#             else:
-#                 messages.error(request, "Invalid role or no modules available for this role.")
-#                 modules = Module.objects.none()
-#         except AttributeError:
-#             messages.error(request, "User profile not found.")
-#             modules = Module.objects.none()
-#     else:
-#         modules = all_modules
-
-#     if query:
-#         modules = modules.filter(
-#             Q(module_name__icontains=query) |
-#             Q(module_group__group_name__icontains=query)
-#         )
-
-#     module_groups = ModuleGroup.objects.all()
-#     form = ExcelImportForm()
-
-#     return render(request, 'home.html', {
-#         'module_groups': module_groups,
-#         'modules': modules,
-#         'form': form,
-#     })
