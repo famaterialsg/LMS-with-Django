@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from course.models import Course
 from quiz.models import Question
-from .models import Assessment,  StudentAssessmentAttempt, AnswerOption, UserAnswer, UserSubmission, StudentAssessmentAttempt, InvitedCandidate
+from .models import Assessment,  StudentAssessmentAttempt, AnswerOption, UserAnswer, StudentAssessmentAttempt, InvitedCandidate
 from .forms import AssessmentForm, AssessmentAttemptForm, InviteCandidatesForm
 from exercises.models import Exercise
 
@@ -47,7 +47,73 @@ def pre_take_ass(request, assessment):
                 'error': 'Both Name and Email are required for taking this assessment.',
             })
 
-def take_assessment(request, assessment_id):
+# will delete
+@login_required
+def invite_candidates_add_attemp(request, pk):
+    assessment = get_object_or_404(Assessment, pk=pk)
+
+    if request.method == 'POST':
+        form = InviteCandidatesForm(request.POST)
+        if form.is_valid():
+            emails = form.cleaned_data['emails'].split(',')
+            emails = [email.strip() for email in emails if email.strip()]
+
+            invited_candidates = []
+
+            for email in emails:
+                # Check if the email has already been invited
+                if not InvitedCandidate.objects.filter(assessment=assessment, email=email).exists():
+                    # Create an InvitedCandidate instance
+                    invited_candidate = InvitedCandidate.objects.create(
+                        assessment=assessment,
+                        email=email
+                    )
+                    invited_candidate.set_expiration_date(days=7)
+                    invited_candidate.save()
+
+                    # Create a StudentAssessmentAttempt immediately for the invited candidate
+                    attempt = StudentAssessmentAttempt.objects.create(
+                        user=None,  # User is None since they aren't authenticated yet
+                        email=email,
+                        assessment=assessment,
+                        score_quiz=0.0,
+                        score_ass=0.0
+                    )
+
+                    # Generate the invitation link
+                    token = invite_token_generator.make_token(invited_candidate)
+                    uid = urlsafe_base64_encode(force_bytes(invited_candidate.pk))
+                    invite_link = request.build_absolute_uri(
+                        reverse('assessment:assessment_invite_accept', kwargs={'uidb64': uid, 'token': token})
+                    )
+
+                    # Send the invite email with the token link
+                    send_mail(
+                        subject=f"You're invited to complete an assessment: {assessment.title}",
+                        message=f"Please click the link below to access the assessment. This link will expire in 7 days.\n\n{invite_link}",
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[email],
+                    )
+
+                    # Track the invited candidate
+                    invited_candidates.append(invited_candidate)
+
+            # Update the invited count for the assessment
+            assessment.invited_count += len(invited_candidates)
+            assessment.save()
+
+            return redirect('assessment:assessment_list')
+
+    else:
+        form = InviteCandidatesForm()
+
+    return render(request, 'assessment/invite_candidates.html', {
+        'form': form,
+        'assessment': assessment,
+    })
+
+# will delete it
+def take_assessment_add_attemp(request, assessment_id):
     assessment = get_object_or_404(Assessment, id=assessment_id)
     questions = assessment.questions.all()
     exercises = assessment.exercises.all()
@@ -66,40 +132,23 @@ def take_assessment(request, assessment_id):
         })
 
     attempt_id = request.session.get('attempt_id')
-    print("Attempt ID retrieved from session: " + str(attempt_id))
-
-    # Handle POST requests for unauthenticated users
     email = None
+
+    # If the user is unauthenticated, check for an attempt created from invitation
     if not request.user.is_authenticated:
         email = request.GET.get('email')  # Retrieve email from query parameters
-        print("tai sao lai the" + email)
-    if not request.user.is_authenticated and request.method == 'POST':
-        
-        try:
-            validate_email(email)
-            print("Email validated successfully.")
-        except ValidationError:
-            print("Error: Invalid email format.")
-            return render(request, 'assessment/take_assessment.html', {
-                'assessment': assessment,
-                'questions': questions,
-                'exercises': exercises,
-                'error': 'Please provide a valid email address.',
-            })
+        if email:
+            # Try to retrieve the existing attempt based on the email and assessment
+            attempt = StudentAssessmentAttempt.objects.filter(email=email, assessment=assessment).first()
+            if attempt:
+                # Set session attempt ID for easy access in further requests
+                request.session['attempt_id'] = attempt.id
+                attempt_id = attempt.id
+                print(f"Using existing attempt with ID: {attempt.id} for email: {email}")
+            else:
+                print("No existing attempt found for email:", email)
 
-        # Create a new attempt
-        with transaction.atomic():
-            attempt = StudentAssessmentAttempt.objects.create(
-                user=None,
-                email=email,
-                assessment=assessment,
-                score_quiz=0.0,
-                score_ass=0.0
-            )
-            request.session['attempt_id'] = attempt.id
-            print(f"New attempt created with ID: {attempt.id}")
-
-    # If user is authenticated or attempt_id exists
+    # Handle form submissions if attempt exists
     if request.method == 'POST' and attempt_id:
         attempt = get_object_or_404(StudentAssessmentAttempt, id=attempt_id)
 
@@ -138,6 +187,7 @@ def take_assessment(request, assessment_id):
         print(f"Assessment completed. Redirecting to results.")
         return redirect('assessment:assessment_result', assessment_id=assessment.id, attempt_id=attempt.id)
 
+    # Render the assessment page if no POST submission is made
     print('Rendering assessment page.')
     return render(request, 'assessment/take_assessment.html', {
         'assessment': assessment,
@@ -145,11 +195,178 @@ def take_assessment(request, assessment_id):
         'exercises': exercises,
         'is_preview': False,
         'anonymous': not request.user.is_authenticated,
-        'email':email,
+        'email': email,
     })
 
+
+def invite_candidates(request, pk):
+    assessment = get_object_or_404(Assessment, pk=pk)
+
+    if request.method == 'POST':
+        form = InviteCandidatesForm(request.POST)
+        if form.is_valid():
+            emails = form.cleaned_data['emails'].split(',')
+            emails = [email.strip() for email in emails if email.strip()]
+
+            # Track invited candidates to avoid duplicates
+            invited_candidates = []
+
+            for email in emails:
+                # Check if the email is already invited
+                # if not InvitedCandidate.objects.filter(assessment=assessment, email=email).exists():
+                if InvitedCandidate.objects.filter(assessment=assessment, email=email).exists():
+                    invited_candidate = InvitedCandidate.objects.create(
+                        assessment=assessment,
+                        email=email
+                    )
+                    invited_candidate.set_expiration_date(days=7)  # Set expiration to 7 days
+                    invited_candidate.save()
+
+                    # Generate a token with an expiration time
+                    token = invite_token_generator.make_token(invited_candidate)
+                    uid = urlsafe_base64_encode(force_bytes(invited_candidate.pk))
+
+                    # Create the invite URL with the token
+                    invite_link = request.build_absolute_uri(
+                        reverse('assessment:assessment_invite_accept', kwargs={'uidb64': uid, 'token': token})
+                    )
+
+                    # Send the invite email with the token link
+                    send_mail(
+                        subject=f"You're invited to complete an assessment: {assessment.title}",
+                        message=f"Please click the link below to access the assessment. This link will expire in 7 days.\n\n{invite_link}",
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[email],
+                    )
+
+                    # Track the invited candidate
+                    invited_candidates.append(invited_candidate)
+
+            # Update invited_count based on the number of unique invited candidates
+            assessment.invited_count += len(invited_candidates)
+            assessment.save()
+
+            return redirect('assessment:assessment_list')
+
+    else:
+        form = InviteCandidatesForm()
+
+    return render(request, 'assessment/invite_candidates.html', {
+        'form': form,
+        'assessment': assessment,
+    })
+
+
+
+def take_assessment(request, assessment_id):
+    assessment = get_object_or_404(Assessment, id=assessment_id)
+    questions = assessment.questions.all()
+    exercises = assessment.exercises.all()
+    total_marks = assessment.total_score
+    total_questions = questions.count()
+
+    # Check if the user is in preview mode
+    is_preview = request.GET.get('preview', 'false').lower() == 'true'
+    if is_preview:
+        return render(request, 'assessment/take_assessment.html', {
+            'assessment': assessment,
+            'questions': questions,
+            'exercises': exercises,
+            'is_preview': True,
+        })
+
+    # Retrieve attempt ID from session
+    attempt_id = request.session.get('attempt_id')
+    email = request.GET.get('email') if not request.user.is_authenticated else None
+
+    # Handle unauthenticated users with email verification
+    if not request.user.is_authenticated and email:
+        try:
+            validate_email(email)
+        except ValidationError:
+            return render(request, 'assessment/take_assessment.html', {
+                'assessment': assessment,
+                'questions': questions,
+                'exercises': exercises,
+                'error': 'Please provide a valid email address.',
+                'email': email
+            })
+
+    if request.method == 'POST':
+        print('come to post to see email')
+        email = request.POST.get('email')  # Get the email from the form data
+        print(email)
+        # Start a new attempt if it doesn't exist in the session
+        if attempt_id:
+            attempt = get_object_or_404(StudentAssessmentAttempt, id=attempt_id)
+        else:
+            # Create a new attempt in an atomic transaction
+            with transaction.atomic():
+                attempt = StudentAssessmentAttempt.objects.create(
+                    user=request.user if request.user.is_authenticated else None,
+                    email=email,
+                    assessment=assessment,
+                    score_quiz=0.0,
+                    score_ass=0.0
+                )
+                request.session['attempt_id'] = attempt.id  # Save attempt ID to session
+
+        correct_answers = 0
+
+        # Process each question
+        for question in questions:
+            selected_option_id = request.POST.get(f'question_{question.id}')
+            selected_option = AnswerOption.objects.get(id=int(selected_option_id)) if selected_option_id else None
+
+            # Save the answer selected by the user
+            UserAnswer.objects.create(
+                assessment=assessment,
+                question=question,
+                selected_option=selected_option,
+            )
+
+            # Tally correct answers for quiz scoring
+            if selected_option and selected_option.is_correct:
+                correct_answers += 1
+
+        # Calculate and save exercise scores
+        total_exercise_score = sum(
+            submission.score for exercise in exercises
+            for submission in Submission.objects.filter(exercise=exercise, assessment=assessment)
+            if submission.score is not None
+        )
+
+        # Redirect to the results page with attempt details
+        if email:  # Check if email is provided
+            return redirect(
+                'assessment:assessment_result',  # Use the name for the URL with email
+                assessment_id=assessment.id,
+                attempt_id=attempt.id,  # Ensure this is the correct attempt ID
+                email=email  # Include email if available
+            )
+        else:
+            return redirect(
+                'assessment:assessment_result_no_email',  # Use the name for the URL without email
+                assessment_id=assessment.id,
+                attempt_id=attempt.id  # Redirect without email if not available
+            )
+
+
+    # Render the assessment page
+    return render(request, 'assessment/take_assessment.html', {
+        'assessment': assessment,
+        'questions': questions,
+        'exercises': exercises,
+        'is_preview': False,
+        'anonymous': not request.user.is_authenticated,
+        'email': email,
+        'attempt_id': attempt_id  # This will be None for GET request
+    })
+
+
+
 @login_required
-def take_assessment_bk(request, assessment_id):
+def take_assessment11(request, assessment_id):
     assessment = get_object_or_404(Assessment, id=assessment_id)
     questions = assessment.questions.all()  # Get all questions in the assessment
     exercises = assessment.exercises.all()  # Assuming you have a related exercise model
@@ -189,7 +406,7 @@ def take_assessment_bk(request, assessment_id):
                 
                 # Create a UserSubmission object for each exercise response
                 if exercise_response:  # Check if there is a response for the exercise
-                    UserSubmission.objects.create(
+                    Submission.objects.create(
                         exercise=exercise,
                         user=request.user,  # Assuming you're getting the logged-in user from the request
                         code=exercise_response  # Store the response in the code field
@@ -213,19 +430,36 @@ def take_assessment_bk(request, assessment_id):
     })
 
 
-
-@login_required
-def assessment_result(request, assessment_id, attempt_id):
+def assessment_result(request, assessment_id, attempt_id, email=None):
     # Get the assessment object and the user's attempt
     assessment = get_object_or_404(Assessment, id=assessment_id)
-    attempt = get_object_or_404(StudentAssessmentAttempt, id=attempt_id, user=request.user)
-
     # Get all user answers for this attempt
-    user_answers = UserAnswer.objects.filter(attempt=attempt)
+    user_answers = UserAnswer.objects.filter(assessment=assessment)
 
-    # Get all user submissions for exercises related to this assessment
-    user_submissions = UserSubmission.objects.filter(exercise__assessments=assessment, user=request.user)
-
+    # Retrieve the user's attempt
+    if request.user.is_authenticated:
+        # If the user is authenticated, retrieve by user
+        attempt = get_object_or_404(StudentAssessmentAttempt, id=attempt_id, user=request.user)
+        user_submissions = Submission.objects.filter(exercise__assessments=assessment, user=request.user)
+    else:
+        # If the user is anonymous, check if email is provided
+        if email:
+            attempt = get_object_or_404(StudentAssessmentAttempt, id=attempt_id, email=email)
+            user_submissions = Submission.objects.filter(exercise__assessments=assessment, user__email=email)
+        else:
+            # Handle the case where email is None
+            return render(request, 'assessment/error.html', {
+                'error': 'Attempt not found. Please ensure you have provided a valid email.'
+            })
+        
+    # Assuming 'email' variable is already defined and contains the user's email when not authenticated
+    if request.user.is_authenticated:
+        attempt = get_object_or_404(StudentAssessmentAttempt, id=attempt_id, user=request.user)
+        user_submissions = Submission.objects.filter(exercise__assessments=assessment, user=request.user)
+    else:
+        attempt = get_object_or_404(StudentAssessmentAttempt, id=attempt_id, email=email)
+        user_submissions = Submission.objects.filter(exercise__assessments=assessment, user__email=email)
+        
 
     # Calculate the total score (already stored in the attempt object)
     score_ass = attempt.score_ass
@@ -246,8 +480,8 @@ def assessment_result(request, assessment_id, attempt_id):
 
 from django.shortcuts import redirect
 
-login_required
 def handle_anonymous_info(request, invited_candidate_id):
+    print('handle_anonymous_info')
     invited_candidate = InvitedCandidate.objects.get(pk=invited_candidate_id)
     if request.method == 'POST':
         name = request.POST.get('name')
@@ -308,63 +542,9 @@ def assessment_invite_accept(request, uidb64, token):
         messages.error(request, "This invitation link is invalid.")
         return redirect('assessment:assessment_list')  # Redirect as appropriate
 
-@login_required
-def invite_candidates(request, pk):
-    assessment = get_object_or_404(Assessment, pk=pk)
 
-    if request.method == 'POST':
-        form = InviteCandidatesForm(request.POST)
-        if form.is_valid():
-            emails = form.cleaned_data['emails'].split(',')
-            emails = [email.strip() for email in emails if email.strip()]
 
-            # Track invited candidates to avoid duplicates
-            invited_candidates = []
 
-            for email in emails:
-                # Check if the email is already invited
-                # if not InvitedCandidate.objects.filter(assessment=assessment, email=email).exists():
-                if InvitedCandidate.objects.filter(assessment=assessment, email=email).exists():
-                    invited_candidate = InvitedCandidate.objects.create(
-                        assessment=assessment,
-                        email=email
-                    )
-                    invited_candidate.set_expiration_date(days=7)  # Set expiration to 7 days
-                    invited_candidate.save()
-
-                    # Generate a token with an expiration time
-                    token = invite_token_generator.make_token(invited_candidate)
-                    uid = urlsafe_base64_encode(force_bytes(invited_candidate.pk))
-
-                    # Create the invite URL with the token
-                    invite_link = request.build_absolute_uri(
-                        reverse('assessment:assessment_invite_accept', kwargs={'uidb64': uid, 'token': token})
-                    )
-
-                    # Send the invite email with the token link
-                    send_mail(
-                        subject=f"You're invited to complete an assessment: {assessment.title}",
-                        message=f"Please click the link below to access the assessment. This link will expire in 7 days.\n\n{invite_link}",
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=[email],
-                    )
-
-                    # Track the invited candidate
-                    invited_candidates.append(invited_candidate)
-
-            # Update invited_count based on the number of unique invited candidates
-            assessment.invited_count += len(invited_candidates)
-            assessment.save()
-
-            return redirect('assessment:assessment_list')
-
-    else:
-        form = InviteCandidatesForm()
-
-    return render(request, 'assessment/invite_candidates.html', {
-        'form': form,
-        'assessment': assessment,
-    })
 
 @login_required
 def assessment_detail(request, pk):
@@ -517,16 +697,13 @@ def assessment_list(request):
     })
 
 
+@login_required
 def get_exercise_content(request, exercise_id):
     exercise = Exercise.objects.get(id=exercise_id)
     return JsonResponse({
         'title': exercise.title,
         'content': exercise.description  
     })
-
-
-
-
 
 
 @login_required

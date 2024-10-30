@@ -326,16 +326,6 @@ def home(request):
     })
 
 
-
-def subject_view(request):
-    module_groups = ModuleGroup.objects.prefetch_related('modules').all()
-    active_module_url = request.resolver_match.url_name  # Get the current URL name
-    return render(request, 'home.html', {
-        'module_groups': module_groups,
-        'active_module_url': active_module_url,  # Pass the active module URL
-    })
-
-
 # def home(request):
 #     query = request.GET.get('q')
 #     all_modules = Module.objects.all()
