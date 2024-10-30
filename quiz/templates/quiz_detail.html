@@ -3,27 +3,7 @@
 
 {% block content %}
 <style>
-    .quiz-title {
-        font-weight: bold;
-        font-size: 1em;
-        margin-right: 10px;
-        vertical-align: middle; /* Align to middle */
-    }
-
-    .quiz-category {
-        display: inline-block;
-        padding: 0.25em 0.5em;
-        font-size: 0.4em;
-        font-weight: normal;
-        line-height: 1;
-        color: #212529;
-        text-align: center;
-        white-space: nowrap;
-        vertical-align: middle; /* Align to middle */
-        border-radius: 0.25rem;
-        background-color: #f0f8ff; /* Light background color */
-        border: 1px solid #d0e6ff; /* Light border color */
-    }
+    
 
     h1 span.description {
         display: inline-block;
@@ -56,10 +36,6 @@
         margin-top: 20px; /* Add some space above the button */
     }
     
-
-    .btn-space {
-        margin-right: 15px; /* Adjust as necessary for desired spacing */
-    }
 
     .button-container {
         display: flex; /* Sử dụng flexbox để căn chỉnh */
@@ -237,7 +213,6 @@
     
 </style>
 <div class="container mt-4">
-
     <!-- Back Button -->
     <div class="mb-2">
         <a href="{% url 'quiz:quiz_list' %}" class="btn btn-link"><i class="fas fa-arrow-left"></i> Back to all Quizzes</a>
@@ -248,13 +223,17 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
             <h1 class="card-title mb-0">
-                <span class="quiz-title">{{ quiz.quiz_title }}</span>
-                <span class="quiz-category">{{ quiz.quiz_description }}</span>
+                <span class="quiz-title fw-bold fs-5 me-2 align-middle">{{ quiz.quiz_title }}</span>
+                <span class="quiz-category d-inline-block py-1 px-2 fs-6 text-secondary align-middle rounded" 
+                      style="background-color: #f0f8ff; border: 1px solid #d0e6ff;">
+                    {{ quiz.quiz_description }}
+                </span>
                 <span class="badge bg-light text-dark small-description"></span>
             </h1>
             <p class="text-muted mb-0">Created by {{ quiz.created_by }} on {{ quiz.created_at|date:"d M Y" }}</p>
         </div>
     </div>
+    
 
     <!-- Invitation and Assessment Details -->
     <div class="row mb-3">
@@ -301,10 +280,10 @@
             <h4 class="mb-2">Questions</h4>
             <div class="mb-2 d-flex align-items-center">
                 <div class="mb-2 d-flex align-items-center">
-                    <button class="btn btn-primary btn-sm btn-space" onclick="location.href='{% url 'quiz:quiz_question' quiz.id %}'">
+                    <button class="btn btn-primary btn-sm me-1" onclick="location.href='{% url 'quiz:quiz_question' quiz.id %}'">
                         <i class="fas fa-plus"></i> Add
                     </button>
-                    <button class="btn btn-success btn-sm btn-space" onclick="location.href='{% url 'quiz:import_questions' quiz.id %}'">
+                    <button class="btn btn-success btn-sm me-1" onclick="location.href='{% url 'quiz:import_questions' quiz.id %}'">
                         <i class="fas fa-file-import"></i> Import 
                     </button>
                     <button class="btn btn-secondary btn-sm" onclick="location.href='{% url 'quiz:export_questions' quiz.id %}'">
@@ -588,8 +567,6 @@
             });
         }
         
-        
-
         function addNewAnswerField(listItem) {
             addAnswerField(listItem); // Call to add a new empty answer field
         }
