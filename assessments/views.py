@@ -649,7 +649,7 @@ def assessment_edit(request, pk):
             assessment.save()
 
             messages.success(request, 'The assessment has been successfully saved.')
-            return redirect('assessment:assessment_edit', pk=pk)  # Redirect to the same edit page to see the message
+            return redirect('assessment:assessment_list') 
 
     else:
         form = AssessmentForm(instance=assessment)
