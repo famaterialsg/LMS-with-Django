@@ -1,0 +1,7 @@
+# Pipenv
+Pipfile.lock
+Pipfile
+# SQLite database
+db.sqlite3
+# Python bytecode
+**/__pycache__/
