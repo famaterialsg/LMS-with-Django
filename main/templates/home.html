@@ -1,42 +1,63 @@
 {% extends "base.html" %}
-
+{%load static%}
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    
-    <h1 class="mb-4 text-center">Learning Management System </h1>
-    {% for group in module_groups %}
-    <div class="mb-5">
-        <h2 class="text-primary mb-3">{{ group.name }}</h2>  
 
+    <h1 class="mb-4 text-center">Courses You're Learning</h1>
+
+    <!-- Enrolled Courses Section -->
+    <div class=" my-5">
         <div class="row">
-            {% for module in modules %}
-                {% if module.module_group == group %}
-                <div class="col-md-4 mb-4">
-                    <div class="card shadow-sm h-100">
-                        <!-- Bọc nội dung card trong thẻ a để tạo liên kết -->
-                        <a href="{% url module.module_url %}" class="text-decoration-none text-dark">
-                            <div class="card-body text-center d-flex flex-column justify-content-center" style="height: 180px; width: 100%; overflow: hidden;">
-                                <!-- Module Icon -->
-                                <div class="icon mb-3">
-                                    <i class="{{ module.icon }} fa-3x" style="color: #2196F3;"></i> <!-- Thay đổi màu icon -->
+            {% for enrollment in courses %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    {% if enrollment.course.image %}
+                        <img src="{{ enrollment.course.image.url }}" alt="{{ enrollment.course.course_name }}" class="card-img-top w-100 h-100" style="object-fit: cover;">
+                    {% else %}
+                        <img src="{% static 'course/images/chotbg.png' %}" alt="Default Image" class="card-img-top w-100 h-100" style="object-fit: cover;">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">{{ enrollment.course.course_name }}</h5>
+                        <p class="card-text text-muted">{{ enrollment.course.description|truncatewords:20 }}</p>
+                        <div class="mb-2">
+                            <div class="progress" style="height: 20px;">
+                                <div 
+                                    class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
+                                    role="progressbar" 
+                                    style="width: {{ enrollment.completion_percent }}%;" 
+                                    aria-valuenow="{{ enrollment.completion_percent }}" 
+                                    aria-valuemin="0" 
+                                    aria-valuemax="100">
+                                    {{ enrollment.completion_percent }}%
                                 </div>
-
-                                <!-- Module Name -->
-                                <h5 class="card-title" style="font-size: 1.5rem;">{{ module.module_name }}</h5>
-
-                                
                             </div>
-                        </a>
+                            
+                        </div>
                     </div>
+                    <div class="card-footer text-center">
+                       
+                        <a href="{% url 'course:course_content' enrollment.course.pk enrollment.course.sessions.first.id %}" class="btn btn-outline-primary d-flex align-items-center justify-content-center" style="gap: 8px;">
+                            <i class="fas fa-book" style="font-size: 1.2em;"></i>
+                            <span class="fw-bold">Click here to learn ({{ enrollment.course.sessions.count }} Sessions)</span>
+                            
+                        </a>                        
+
+                    </div>
+                    
                 </div>
-                {% endif %}
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-4">
+                <p class="text-muted">No courses found.</p>
+            </div>
             {% endfor %}
         </div>
     </div>
-    {% endfor %}
-</div>
+    
+    
+
+
 {% endblock %}
 
 {% block extra_css %}

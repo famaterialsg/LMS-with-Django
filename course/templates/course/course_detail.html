@@ -9,7 +9,8 @@
     <link rel="stylesheet" type="text/css" href="{% static 'course/course.css' %}">
 </head>
 <body id="course-detail">
-<div class="background-wrapper" style="background-image: url('{% if course.image %}{{ course.image.url }}{% else %}{% static 'course/images/blue(8).png' %}{% endif %}');">
+<!-- <div class="background-wrapper" style="background-image: url('{% if course.image %}{{ course.image.url }}{% else %}{% static 'course/images/blue(8).png' %}{% endif %}');"> -->
+    <div>
     {% if user_type == 'instructor' or user.is_superuser %}
     <div class="container mt-0">
         <a href="{% url 'course:course_list' %}" style="margin-top: -60px; font-size: 18px; color: #0087f3;">

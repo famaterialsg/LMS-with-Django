@@ -743,8 +743,10 @@ def edit_reading_material(request, pk, session_id, reading_material_id):
     }
 
     return render(request, 'material/edit_reading_material.html', context)
+
 @login_required
 def course_content(request, pk, session_id):
+    module_groups = ModuleGroup.objects.all()
     course = get_object_or_404(Course, pk=pk)
     sessions = Session.objects.filter(course=course).order_by('order')
 
@@ -830,6 +832,7 @@ def course_content(request, pk, session_id):
         'completion_percent': completion_percent,
         'certificate_url': certificate_url,
         'next_session': next_session,
+        'module_groups': module_groups
     }
 
     return render(request, 'course/course_content.html', context)
