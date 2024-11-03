@@ -40,6 +40,8 @@ urlpatterns = [
     path('certification/', include('certification.urls')),
     path('learning_path/', include('learning_path.urls')),
     path('backup/', include('backup.urls')),
+    path('student_portal/', include('student_portal.urls')),
+    path('quiz_generator/', include('quiz_generator.urls')),
     
     #group01
     path('user/', include(('user.urls', 'user'), namespace='user')),  # Register user app URLs with a namespace
@@ -70,6 +72,7 @@ urlpatterns = [
     path('progress_notification', include('progress_notification.urls')),
     path('book/', include('book.urls')),
     path('achievement/',include('achievement.urls')),
+    path('quiz_bank/',include('quiz_bank.urls')),
 
     #group06 - Binh_Thang - Coding
     path('exercises/', include('exercises.urls')), 

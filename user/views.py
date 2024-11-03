@@ -19,7 +19,7 @@ from quiz.models import StudentQuizAttempt
 from activity.models import UserActivityLog
 from django.contrib.auth.hashers import check_password
 from import_export.formats.base_formats import XLSX
-from .admin import UserProfileResource
+from .admin_0211 import UserProfileResource
 from tablib import Dataset
 from io import StringIO
 
