@@ -5,6 +5,7 @@
 
 <div class="container mt-5">
     <!-- Course Header -->
+    
     <div class="card mb-4 shadow-sm">
         <div class="card-body">
             <h1 class="card-title">{{ course.course_name }}</h1>
@@ -40,8 +41,9 @@
 
     <!-- Buttons -->
     <div class="mt-auto text-center">
+        <a href="{% url 'student_portal:course_content' course.id sessions.0.id%}" class="btn btn-primary">Study</a>
     {% if is_enrolled  %}
-        <a href="{% url 'student_portal:unenroll' course.pk %}" class="btn btn-primary me-2" title="Click to unenroll">Unenroll</a>
+        <a href="{% url 'student_portal:unenroll' course.pk %}" class="btn btn-outline-danger me-2" title="Click to unenroll">Unenroll</a>
     {% else %}
         <a href="{% url 'student_portal:enroll' course.id %}" class="btn btn-success me-2" title="Click to enroll">Enroll</a>
     {% endif %}

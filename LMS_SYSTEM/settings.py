@@ -108,10 +108,10 @@ INSTALLED_APPS = [
     'exercises', #Binh_Thang
     #ngattt
     'assessments', 'reports', 'group_enrollment', 'mylearning', 'certification', 
-    'learning_path', 'backup', 'student_portal', 'quiz_generator',
+    'learning_path', 'backup', 'student_portal', #'quiz_generator',
 
     #group01
-    'user', 'role', 'department', 
+    'user', 'role', 'department', 'team',
 
     #group02
     'course', 'feedback', 'forum', 

@@ -41,12 +41,13 @@ urlpatterns = [
     path('learning_path/', include('learning_path.urls')),
     path('backup/', include('backup.urls')),
     path('student_portal/', include('student_portal.urls')),
-    path('quiz_generator/', include('quiz_generator.urls')),
+    #path('quiz_generator/', include('quiz_generator.urls')),
     
     #group01
     path('user/', include(('user.urls', 'user'), namespace='user')),  # Register user app URLs with a namespace
     path('role/', include(('role.urls', 'user'))),
     path('department/', include(('department.urls', 'department'))),
+    path('team/', include(('team.urls', 'team'))),
 
     #group02
     path('course/', include('course.urls')),

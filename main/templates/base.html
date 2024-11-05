@@ -8,6 +8,13 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     {% block extra_css %}{% endblock %}
+    <style>
+        /* Custom active class styling */
+        .nav-link.active {
+            color: #ffffff !important;
+            background-color: #0d6efd !important; /* Dark background for active links */
+        }
+    </style>
 </head>
 <body>
     <!-- Navbar -->
@@ -20,20 +27,22 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     {% if request.user.is_authenticated %}
+                        
                         {% include 'notification_bell.html' %}
-                        {% if user.is_superuser %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'student_portal:course_list' %}">
+                                <i class="fas fa-user-graduate"></i> Learning
+                            </a>
+                        </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'admin:index' %}" target="_blank">
                                 <i class="fas fa-user-shield"></i> Admin Django
                             </a>
                         </li>
-                        {%endif%}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 {% if request.user.profile.profile_picture_url %}
                                     <img src="{{ request.user.profile.profile_picture_url }}" alt="Profile Picture" class="rounded-circle" width="30" height="30">
-                                {%else%}
-                                    <img src="https://picsum.photos/200/200" alt="Profile Picture" class="rounded-circle" width="30" height="30">
                                 {% endif %}
                                 {{ request.user.get_full_name|default:request.user.username }}
                             </a>
@@ -93,13 +102,11 @@
             </nav>
             
             <!-- Adjust the main content to account for the fixed sidebar -->
-            <main class="col-md-9 col-lg-10 ms-auto offset-lg-2 mt-5 pt-3" style="margin-left: 16.67%;">
-                <div class="container-fluid">
+            <div class="col-md-9 main-content flex-grow-1 mt-5" style="margin-left: 16.67%;">
+                <div class="container-fluid mt-1 pt-1">
                     {% block content %}{% endblock %}
                 </div>
-            </main>
-            
-
+            </div>
             
         </div>
     </div>
@@ -111,37 +118,29 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.2/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            document.querySelectorAll('.nav-link').forEach(function (link) {
-                link.addEventListener('click', function () {
-                    document.querySelectorAll('.nav-link').forEach(function (el) {
-                        el.classList.remove('active');
-                    });
-                    this.classList.add('active');
-                });
-            });
+document.addEventListener("DOMContentLoaded", function () {
+    // Set active link and expand group based on current URL
+    const currentURL = window.location.pathname;
     
-            document.querySelectorAll('.collapse').forEach(function (collapseElement) {
-                collapseElement.addEventListener('show.bs.collapse', function () {
-                    document.querySelectorAll('.collapse').forEach(function (el) {
-                        if (el !== collapseElement) {
-                            el.classList.remove('show');
-                        }
-                    });
-                });
-            });
-    
-            const currentURL = window.location.pathname;
-            document.querySelectorAll('.collapse').forEach(function (collapseElement) {
-                const moduleLinks = collapseElement.querySelectorAll('.nav-link');
-                moduleLinks.forEach(function (moduleLink) {
-                    if (moduleLink.getAttribute('href') === currentURL) {
-                        moduleLink.classList.add('active');
-                        collapseElement.classList.add('show');
-                    }
-                });
-            });
+    document.querySelectorAll('.collapse').forEach(function (collapseElement) {
+        const moduleLinks = collapseElement.querySelectorAll('.nav-link');
+        let isActiveGroup = false;
+
+        moduleLinks.forEach(function (moduleLink) {
+            if (moduleLink.getAttribute('href') === currentURL) {
+                moduleLink.classList.add('active');
+                isActiveGroup = true;
+            } else {
+                moduleLink.classList.remove('active');
+            }
         });
+
+        // Expand group if it contains the active link
+        if (isActiveGroup) {
+            collapseElement.classList.add('show');
+        }
+    });
+});
     </script>
     {% block extra_js %}{% endblock %}
 </body>

@@ -1,8 +1,8 @@
 <!-- course_list.html -->
 {% extends 'basePortal.html' %}
+{%load static%}
 {% block title %}Courses{% endblock %}
 {% block content %}
-
 <style>
     .text-warning {
     color: #ffc107 !important; /* Bootstrap's yellow color */
@@ -23,12 +23,14 @@
     <div class="col-md-4 mb-4">
         <div class="card shadow-sm border-light">
             <div class="ratio ratio-16x9"> <!-- Aspect Ratio Wrapper -->
-                {% if course.image %}
-                    <img src="{{ course.image.url }}" class="card-img-top" alt="{{ course.course_name }}" style="object-fit: cover;">
-                {% else %}
-                    <img src="https://picsum.photos/200/200?random={{ forloop.counter }}" class="card-img-top" alt="Placeholder Image" style="object-fit: cover;">
-                {% endif %}
-            </div>
+                <a href="{% url 'student_portal:course_content_no_session' course.id %}">
+                    {% if course.image %}
+                        <img title="Click here to learn" src="{{ course.image.url }}" class="card-img-top" alt="{{ course.course_name }}" style="object-fit: cover;">
+                    {% else %}
+                        <img title="Click here to learn" src="{% static 'course/images/chotbg.png' %}" alt="Default Image" class="card-img-top" style="object-fit: cover;">
+                    {% endif %}
+                </a>
+            </div>            
             
             <div class="card-body d-flex flex-column">
                 <h5 class="card-title">{{ course.course_name }}</h5>
@@ -49,7 +51,18 @@
                     </div>
                 </div>
                 <div class="mt-auto text-center">
-                    <a href="{% url 'student_portal:course_detail' course.id %}" class="btn btn-primary">View Details</a>
+                    <!-- Button to view course details if user is not enrolled -->
+                    <a href="{% url 'student_portal:course_detail' course.id %}" class="btn btn-secondary">
+                        <i class="fas fa-info-circle me-2"></i> <!-- Info icon -->
+                        View Details
+                    </a>
+                    {% if course.user_enrolled %}
+                        <!-- Button to go directly to course content if user is enrolled -->
+                        <a href="{% url 'student_portal:course_content_no_session' course.id %}" class="btn btn-primary">
+                            <i class="fas fa-book-open me-2"></i> <!-- Book open icon -->
+                            Study
+                        </a>
+                    {% endif %}    
                 </div>
             </div>
         </div>
@@ -110,7 +123,7 @@
                 {% if course.image %}
                     <img src="{{ course.image.url }}" class="card-img-top" alt="{{ course.course_name }}" style="object-fit: cover;">
                 {% else %}
-                    <img src="https://picsum.photos/200/200?random={{ forloop.counter }}" class="card-img-top" alt="Placeholder Image" style="object-fit: cover;">
+                    <img src="{% static 'course/images/chotbg.png' %}" alt="Default Image" class="card-img-top" alt="Placeholder Image" style="object-fit: cover;">
                 {% endif %}
             </div>
             <div class="card-body d-flex flex-column">

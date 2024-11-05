@@ -306,7 +306,7 @@ def course_list(request):
     current_recommended_page = recommended_page_obj.number if recommended_page_obj else 1
 
     # Pagination for main courses
-    paginator = Paginator(courses, 3)  # Show 10 courses per page
+    paginator = Paginator(courses, 9)  # Show 10 courses per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 

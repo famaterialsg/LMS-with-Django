@@ -18,9 +18,58 @@ import random
 from django.core.cache import cache
 from django.conf import settings
 from course.models import Course  
+from .module_utils import get_grouped_modules
 
-
+@login_required
 def home(request):
+    roles = Role.objects.all() 
+    query = request.GET.get('q')
+    temporary_role_id = request.session.get('temporary_role')
+
+    module_groups, grouped_modules = get_grouped_modules(request.user, temporary_role_id)
+
+    # Lọc modules dựa trên truy vấn tìm kiếm
+    if query:
+        modules = [module for modules in grouped_modules.values() for module in modules]
+        modules = [module for module in modules if query.lower() in module.module_name.lower() or query.lower() in module.module_group.group_name.lower()]
+    else:
+        modules = [module for modules in grouped_modules.values() for module in modules]
+    return render(request, 'home.html', {
+        'module_groups': module_groups,
+        'modules': modules,
+        'grouped_modules': grouped_modules,
+        'roles': roles,
+        'temporary_role': temporary_role_id,
+    })
+
+def home_module(request):
+    roles = Role.objects.all() 
+    query = request.GET.get('q')
+    temporary_role_id = request.session.get('temporary_role')
+
+    module_groups, grouped_modules = get_grouped_modules(request.user, temporary_role_id)
+
+    # Lọc modules dựa trên truy vấn tìm kiếm
+    if query:
+        modules = [module for modules in grouped_modules.values() for module in modules]
+        modules = [module for module in modules if query.lower() in module.module_name.lower() or query.lower() in module.module_group.group_name.lower()]
+    else:
+        modules = [module for modules in grouped_modules.values() for module in modules]
+
+    form = ExcelImportForm()
+
+    return render(request, 'home.html', {
+        'module_groups': module_groups,
+        'modules': modules,
+        'grouped_modules': grouped_modules,
+        'form': form,
+        'roles': roles,
+        'temporary_role': temporary_role_id,
+    })
+
+
+from course.models import Course 
+def home_course(request):
     query = request.GET.get('q')
     module_groups = ModuleGroup.objects.all()
     
